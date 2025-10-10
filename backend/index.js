@@ -8,6 +8,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use("/jobs",jobRoute);
+
 
 
 const port = process.env.PORT || 3000;
