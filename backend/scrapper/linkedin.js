@@ -13,7 +13,7 @@ export async function scrapeLinkedInJobs(keyword) {
       "Chrome/115 Safari/537.36"
   );
   //  * Setting a User-Agent end
-  //   Notes for the above user-agent
+  //   ! Notes for the above user-agent
   //   ? Websites sometimes block automated browsers.
 
   // ? Setting a user-agent makes Puppeteer look like a normal Chrome browser instead of a bot.
