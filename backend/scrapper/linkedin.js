@@ -1,6 +1,6 @@
-import puppeteer from "puppeteer";
+const puppeteer = require("puppeteer");
 
-export async function scrapeLinkedInJobs(keyword) {
+async function scrapeLinkedInJobs(keyword) {
   // * Launching a Browser
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
@@ -56,3 +56,4 @@ export async function scrapeLinkedInJobs(keyword) {
   await browser.close();
   return jobs;
 }
+module.exports = scrapeLinkedInJobs;

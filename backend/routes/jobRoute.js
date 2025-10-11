@@ -1,7 +1,8 @@
-const express = require('express');
+const express = require("express");
+const scrapeLinkedInJobs = require("../scrapper/linkedin");
 const router = express.Router();
 
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   const { keyword, sites } = req.body;
   // * validation for the keyword and sites
   if (!keyword || !Array.isArray(sites)) {
@@ -10,16 +11,16 @@ router.post('/', async (req, res) => {
   // * validation for the keyword and sites end
 
   try {
-      //   * Scraping Jobs from Multiple Sites
+    //   * Scraping Jobs from Multiple Sites
     const results = await Promise.all(
       sites.map(async (site) => {
         switch (site) {
           case "linkedin":
             return scrapeLinkedInJobs(keyword);
-          case "naukri":
-            return scrapeNaukriJobs(keyword);
-          case "glassdoor":
-            return scrapeGlassdoorJobs(keyword);
+          //   case "naukri":
+          //     return scrapeNaukriJobs(keyword);
+          //   case "glassdoor":
+          //     return scrapeGlassdoorJobs(keyword);
           default:
             return [];
         }
