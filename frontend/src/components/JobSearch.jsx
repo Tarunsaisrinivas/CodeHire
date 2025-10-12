@@ -37,11 +37,11 @@ function JobSearch() {
         },
         {
             name: "naukri",
-            logo: "https://upload.wikimedia.org/wikipedia/commons/7/7d/Naukri_Logo.png",
+            logo: "https://play-lh.googleusercontent.com/76gEFhQto5xMHr2Qf8nWLvm1s0O60clhkwHvxQDSeI3hthf7Zs05JJQeyg5H347DGQ",
         },
         {
             name: "glassdoor",
-            logo: "https://upload.wikimedia.org/wikipedia/commons/6/6f/Glassdoor_logo.png",
+            logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Glassdoor_logo.svg/1280px-Glassdoor_logo.svg.png",
         },
       
     ];
