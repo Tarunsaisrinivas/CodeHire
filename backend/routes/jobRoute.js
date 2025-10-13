@@ -1,44 +1,57 @@
 const express = require("express");
 const scrapeLinkedInJobs = require("../scrapper/linkedin");
 const scrapeNaukriJobs = require("../scrapper/naukari");
+
 const router = express.Router();
 
 router.post("/", async (req, res) => {
   const { keyword, sites } = req.body;
-  // * validation for the keyword and sites
-  if (!keyword || !Array.isArray(sites)) {
+
+  if (!keyword || !Array.isArray(sites) || sites.length === 0) {
     return res.status(400).json({ error: "Keyword and sites are required" });
   }
-  // * validation for the keyword and sites end
 
   try {
-    //   * Scraping Jobs from Multiple Sites
-    const results = await Promise.all(
+    console.log(`🔍 Fetching jobs for "${keyword}" from:`, sites);
+
+    const results = await Promise.allSettled(
       sites.map(async (site) => {
-        switch (site) {
-          case "linkedin":
-            return scrapeLinkedInJobs(keyword);
-          case "naukri":
-            return scrapeNaukriJobs(keyword);
-          //   case "glassdoor":
-          //     return scrapeGlassdoorJobs(keyword);
-          default:
-            return [];
+        try {
+          switch (site) {
+            case "linkedin":
+              return await scrapeLinkedInJobs(keyword);
+            case "naukri":
+              return await scrapeNaukriJobs(keyword);
+            default:
+              console.warn(`⚠️ Unsupported site: ${site}`);
+              return [];
+          }
+        } catch (err) {
+          console.error(`❌ Error scraping ${site}:`, err.message);
+          return [];
         }
       })
-      //   * Scraping Jobs from Multiple Sites end
     );
 
-    // * Combining the results
-    const combined = results.flat().map((job, i) => ({
-      ...job,
-      source: job.source || sites[i % sites.length],
-    }));
+    const combined = results
+      .filter((r) => r.status === "fulfilled")
+      .flatMap((r) => r.value)
+      .map((job) => ({
+        ...job,
+        title: job.title || "Untitled Job",
+        company: job.company || "Unknown",
+        location: job.location || "N/A",
+        link: job.link || "#",
+        source: job.source || "unknown",
+      }));
 
-    res.json(combined);
-    // * Combining the results end
+    console.log(`✅ Total jobs fetched: ${combined.length}`);
+    if (combined.length === 0)
+      return res.status(404).json({ message: "No jobs found" });
+
+    res.status(200).json(combined);
   } catch (err) {
-    console.error("Error fetching jobs:", err);
+    console.error("🔥 Fatal error fetching jobs:", err);
     res.status(500).json({ error: "Failed to fetch jobs" });
   }
 });

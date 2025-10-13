@@ -1,37 +1,34 @@
 const puppeteer = require("puppeteer");
 
 async function scrapeLinkedInJobs(keyword) {
-  // * Launching a Browser
-  const browser = await puppeteer.launch({ headless: true });
-  const page = await browser.newPage();
-  // * Launching a Browser end
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
 
-  //  * Setting a User-Agent
+  const page = await browser.newPage();
+
+  // * Set User-Agent to avoid bot detection
   await page.setUserAgent(
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
       "AppleWebKit/537.36 (KHTML, like Gecko) " +
       "Chrome/115 Safari/537.36"
   );
-  //  * Setting a User-Agent end
-  //   ! Notes for the above user-agent
-  //   ? Websites sometimes block automated browsers.
 
-  // ? Setting a user-agent makes Puppeteer look like a normal Chrome browser instead of a bot.
-
-  //  ? This helps LinkedIn return normal content rather than a CAPTCHA or blank page.
-
-  //   * Navigating to LinkedIn Jobs Page
+  // * Navigate to LinkedIn job search page
   const searchUrl = `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(
     keyword
   )}`;
-  await page.goto(searchUrl, { waitUntil: "networkidle2" });
-  //  * Navigating to LinkedIn Jobs Page end
+  console.log("🔍 Navigating to:", searchUrl);
 
-  //   * Wait for Job Results to Appear
-  await page.waitForSelector("ul.jobs-search__results-list li");
-  //   * Wait for Job Results to Appear end
+  await page.goto(searchUrl, { waitUntil: "networkidle2", timeout: 60000 });
 
-  //   * Extracting Job Data
+  // * Wait for job results
+  await page.waitForSelector("ul.jobs-search__results-list li", {
+    timeout: 15000,
+  });
+
+  // * Extract job data including company logos
   const jobs = await page.evaluate(() => {
     return Array.from(
       document.querySelectorAll("ul.jobs-search__results-list li")
@@ -48,12 +45,28 @@ async function scrapeLinkedInJobs(keyword) {
           .querySelector(".job-search-card__location")
           ?.innerText.trim();
         const link = el.querySelector("a.base-card__full-link")?.href;
+        const logo =
+          el
+            .querySelector(".artdeco-entity-image")
+            ?.getAttribute("data-delayed-url") ||
+          el.querySelector(".artdeco-entity-image")?.getAttribute("src") ||
+          null;
 
-        return { title, company, location, link };
+        return {
+          title,
+          company,
+          location,
+          link,
+          logo,
+          source: "linkedin",
+        };
       });
   });
-  //   * Extracting Job Data end
+
   await browser.close();
+
+  console.log(`✅ Scraped ${jobs.length} LinkedIn jobs`);
   return jobs;
 }
+
 module.exports = scrapeLinkedInJobs;
