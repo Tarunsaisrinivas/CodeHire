@@ -67,6 +67,11 @@ function JobSearch() {
                         placeholderTextColor="gray"
                         value={keyword}
                         onChange={(e) => setKeyword(e.target.value)}
+                        onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleSearch(); // triggers search on Enter
+                                }
+                              }}  
                         className="flex-1 w-full border focus:bg-white focus:text-black text-white  border-gray-300 rounded-lg p-3  focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
                     <button
