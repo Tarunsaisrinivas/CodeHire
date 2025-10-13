@@ -37,7 +37,7 @@ function JobList({ jobs, loading }) {
             {jobs.map((job, idx) => (
                 <div
                     key={idx}
-                    className="border p-4 rounded shadow hover:shadow-md transition bg-white"
+                    className="border p-4 rounded shadow hover:shadow-md transition bg-gray-5"
                 >
                     <div className="flex justify-between items-start">
                         <div>
