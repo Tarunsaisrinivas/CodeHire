@@ -1,9 +1,8 @@
 function JobList({ jobs, loading }) {
     const logos = {
         linkedin: "https://cdn-icons-png.flaticon.com/512/174/174857.png",
-        naukri: "https://static.naukimg.com/s/7/123/i/naukri_Logo.png",
-        glassdoor: "https://upload.wikimedia.org/wikipedia/commons/e/e4/Glassdoor_logo.svg",
-        internshala: "https://internshala.com/static/images/common/new_internshala_logo.svg",
+        naukri: "https://play-lh.googleusercontent.com/76gEFhQto5xMHr2Qf8nWLvm1s0O60clhkwHvxQDSeI3hthf7Zs05JJQeyg5H347DGQ",
+        glassdoor: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Glassdoor_logo.svg/1280px-Glassdoor_logo.svg.png",
     };
 
     if (loading) {
