@@ -68,6 +68,8 @@ function JobSearch() {
                         onChange={(e) => setKeyword(e.target.value)}
                         className="flex-1 w-full border focus:bg-white focus:text-black text-white  border-gray-300 rounded-lg p-3  focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
+
+                   
                     <button
                         onClick={handleSearch}
                         disabled={loading}
@@ -79,6 +81,7 @@ function JobSearch() {
 
                 {/* 🧩 Platform Logos */}
                 <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mt-8 sm:mt-10">
+
                     {platforms.map((site) => {
                         const isSelected = selectedSites.includes(site.name);
                         return (
