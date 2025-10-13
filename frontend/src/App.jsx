@@ -3,7 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import JobSearch from './pages/JobSearch'
-import cards  from './pages/Cards'
+import cards  from './pages/JobList'
 function App() {
   const [count, setCount] = useState(0)
 

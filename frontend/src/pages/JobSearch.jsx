@@ -1,87 +1,127 @@
-import React,{useState} from 'react'
-import tick from '../../images/images.png'
-import Cards from './Cards';
+import { useState } from "react";
+
+import JobList from "./JobList";
+import { fetchJobs } from "../api";
+
 function JobSearch() {
-    const [selectedSite,setSelectedSite] = useState("");
-    const jobs = [
-    {
-      jobTitle: "Frontend Developer",
-      image: "https://cdn-icons-png.flaticon.com/512/174/174857.png",
-      location: "Bangalore, India",
-      salary: "$2000/mo",
-      applyText: "Apply Now",
-    },
-    {
-      jobTitle: "Backend Developer",
-      image: "https://cdn-icons-png.flaticon.com/512/174/174857.png",
-      location: "Hyderabad, India",
-      salary: "$2500/mo",
-      applyText: "Apply Now",
-    },
-    {
-      jobTitle: "Fullstack Developer",
-      image: "https://cdn-icons-png.flaticon.com/512/174/174857.png",
-      location: "Mumbai, India",
-      salary: "$3000/mo",
-      applyText: "Apply Now",
-    },
-  ]
-  
-  const platforms = [{name:"linkedin"},{name:"naukri"},{name:"Glassdoor"}]
-  const tickIcon = "https://media.istockphoto.com/id/1299806659/vector/check-mark-icon-for-design-blank-white-and-black-backgrounds-line-icon.jpg?s=1024x1024&w=is&k=20&c=itoSyocJNDk0i4LQ7VXimL25o3wfx3lcJw--u3rgGd0=";
+    const [keyword, setKeyword] = useState("");
+    const [selectedSites, setSelectedSites] = useState(["linkedin"]);
+    const [jobs, setJobs] = useState([]);
+    const [loading, setLoading] = useState(false);
 
+    const toggleSite = (site) => {
+        setSelectedSites((prev) =>
+            prev.includes(site)
+                ? prev.filter((s) => s !== site)
+                : [...prev, site]
+        );
+    };
 
-  return (
-    <>
-    <div className='bg-blue-300 p-5'>
-        <div className='flex flex-col justify-center '>
+    const handleSearch = async () => {
+        if (!keyword || selectedSites.length === 0) return;
+        setLoading(true);
+        setJobs([]);
+        try {
+            const data = await fetchJobs(keyword, selectedSites);
+            setJobs(data);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to fetch jobs");
+        }
+        setLoading(false);
+    };
 
-        <p className='text-5xl mb-3 flex justify-center mb-4 '>Discover  Your Dream <br />Developer Job</p>
-        {/* <p className='text-5xl mb-3  text-center'>Developer Job</p> */}
-        <p className='mb-4 text-lg flex justify-center -ml-20'>Explore thousands of opportunities from top <br />companies worldwide</p>
-        </div>
-        <div className='flex gap-3 justify-center mb-5 -ml-2'>
-            <input className="border-2 rounded-full w-70 h-10" type="text" name="" id="" />
-            <button className='text-white border-none w-30  text-xl bg-black cursor-pointer border-2  rounded-lg' htmlFor="">Search</button>
-        </div>
+    const platforms = [
+        {
+            name: "linkedin",
+            logo: "https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png",
+        },
+        {
+            name: "naukri",
+            logo: "https://play-lh.googleusercontent.com/76gEFhQto5xMHr2Qf8nWLvm1s0O60clhkwHvxQDSeI3hthf7Zs05JJQeyg5H347DGQ",
+        },
+        {
+            name: "glassdoor",
+            logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Glassdoor_logo.svg/1280px-Glassdoor_logo.svg.png",
+        },
+      
+    ];
 
-        <div className='flex justify-center gap-3 -ml-5'>
-            <div className=' flex gap-2 border-2 px-3 py-2 rounded-3xl' >
-                <img  className="w-6 h-6" src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="image" />
-                <p className='text-xl cursor-pointer' name='linkedin'>linkedin</p>
-            </div>
-            <div className='flex gap-2 border-2 px-3 py-2 rounded-3xl'>
-                <img className="w-6 h-6" src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="image" />
-                <p className='text-xl cursor-pointer' name = 'naukri'>naukri</p>
-            </div>
-            <div className='flex gap-2 border-2 px-3 py-2 rounded-3xl'>
-                <img className="w-6 h-6" src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="image" />
-                <p className='text-xl cursor-pointer' name = 'Glassdoor'>Glassdoor</p>
-            </div>  
-        </div>
+    return (
+        <div className="min-h-screen flex flex-col bg-gray-50">
+            {/* 🌟 Hero Section */}
+            <div className="bg-indigo-500 text-white py-16 md:py-20 px-4 md:px-6 flex flex-col items-center text-center">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-snug">
+                    Discover Your Dream <br className="hidden sm:block" /> Developer Job
+                </h1>
 
+                <p className="text-base sm:text-lg md:text-xl text-blue-100 mb-10 max-w-2xl">
+                    Explore thousands of opportunities from top <br className="hidden sm:block" /> companies worldwide
+                </p>
 
-                <div>
-                    
+                {/* 🔍 Search Bar */}
+                <div className="bg-white/20 backdrop-blur-md rounded-2xl shadow-lg flex flex-col sm:flex-row items-center gap-3 p-3 sm:p-4 w-full max-w-2xl">
+                    <input
+                        type="text"
+                        placeholder="Enter job title (e.g. React Developer)"
+                        placeholderTextColor="gray"
+                        value={keyword}
+                        onChange={(e) => setKeyword(e.target.value)}
+                        className="flex-1 w-full border focus:bg-white focus:text-black text-white  border-gray-300 rounded-lg p-3  focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                    <button
+                        onClick={handleSearch}
+                        disabled={loading}
+                        className="w-full sm:w-auto bg-black hover:bg-gray-800 cursor-pointer text-white font-semibold px-6 py-3 rounded-lg transition"
+                    >
+                        {loading ? "Searching..." : "Search"}
+                    </button>
                 </div>
 
+                {/* 🧩 Platform Logos */}
+                <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mt-8 sm:mt-10">
+                    {platforms.map((site) => {
+                        const isSelected = selectedSites.includes(site.name);
+                        return (
+                            <div
+                                key={site.name}
+                                onClick={() => toggleSite(site.name)}
+                                className={`cursor-pointer flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-3 rounded-xl border transition-all duration-200
+                  ${isSelected
+                                        ? "bg-white border-blue-600 shadow-md scale-105"
+                                        : "bg-white/70 border-transparent hover:scale-105"
+                                    }`}
+                            >
+                                <div className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
+                                    <img
+                                        src={site.logo}
+                                        alt={site.name}
+                                        className="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-md"
+                                    />
+                                    {isSelected && (
+                                        <div className="absolute -top-1 -right-1 bg-blue-600 text-white rounded-full text-[10px] w-4 h-4 flex items-center justify-center">
+                                            ✓
+                                        </div>
+                                    )}
+                                </div>
+                                <span
+                                    className={`text-sm sm:text-base capitalize font-medium ${isSelected ? "text-blue-700" : "text-gray-800"
+                                        }`}
+                                >
+                                    {site.name}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
 
-
-        
-    </div>
-    <div>
-       
-        <div className="grid grid-cols-2 justify-center">
-        {jobs.map((job, index) => (
-            
-            <Cards key={index} {...job} />
-        ))}
+            {/* 📋 Job List Section */}
+            <div className="flex-grow max-w-6xl mx-auto p-4 sm:p-6 w-full">
+                <JobList jobs={jobs} loading={loading} />
+            </div>
         </div>
-
-    </div>
-    </>
-    
-  )
+    );
 }
 
-export default JobSearch
+export default JobSearch;
