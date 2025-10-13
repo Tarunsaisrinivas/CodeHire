@@ -17,17 +17,27 @@ function JobSearch() {
     };
 
     const handleSearch = async () => {
-        if (!keyword || selectedSites.length === 0) return;
+        if (!keyword.trim() || selectedSites.length === 0) return;
+
         setLoading(true);
         setJobs([]);
+
         try {
             const data = await fetchJobs(keyword, selectedSites);
             setJobs(data);
         } catch (err) {
             console.error(err);
             alert("Failed to fetch jobs");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
+    };
+
+    // ✅ Trigger search on Enter key
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter") {
+            handleSearch();
+        }
     };
 
     const platforms = [
@@ -43,7 +53,6 @@ function JobSearch() {
             name: "glassdoor",
             logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Glassdoor_logo.svg/1280px-Glassdoor_logo.svg.png",
         },
-      
     ];
 
     return (
@@ -63,13 +72,12 @@ function JobSearch() {
                     <input
                         type="text"
                         placeholder="Enter job title (e.g. React Developer)"
-                        placeholderTextColor="gray"
                         value={keyword}
                         onChange={(e) => setKeyword(e.target.value)}
-                        className="flex-1 w-full border focus:bg-white focus:text-black text-white  border-gray-300 rounded-lg p-3  focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        onKeyDown={handleKeyDown} // ✅ triggers on Enter
+                        className="flex-1 w-full border focus:bg-white focus:text-black text-white border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
 
-                   
                     <button
                         onClick={handleSearch}
                         disabled={loading}
@@ -81,7 +89,6 @@ function JobSearch() {
 
                 {/* 🧩 Platform Logos */}
                 <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mt-8 sm:mt-10">
-
                     {platforms.map((site) => {
                         const isSelected = selectedSites.includes(site.name);
                         return (
