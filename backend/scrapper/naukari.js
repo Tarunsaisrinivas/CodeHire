@@ -1,6 +1,6 @@
-import puppeteer from "puppeteer";
+const puppeteer = require("puppeteer");
 
-export async function scrapeNaukriJobs(keyword) {
+async function scrapeNaukriJobs(keyword) {
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
 
@@ -24,3 +24,5 @@ export async function scrapeNaukriJobs(keyword) {
   await browser.close();
   return jobs;
 }
+
+module.exports = scrapeNaukriJobs;

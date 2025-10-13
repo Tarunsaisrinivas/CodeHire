@@ -1,5 +1,6 @@
 const express = require("express");
 const scrapeLinkedInJobs = require("../scrapper/linkedin");
+const scrapeNaukriJobs = require("../scrapper/naukari");
 const router = express.Router();
 
 router.post("/", async (req, res) => {
@@ -17,8 +18,8 @@ router.post("/", async (req, res) => {
         switch (site) {
           case "linkedin":
             return scrapeLinkedInJobs(keyword);
-          //   case "naukri":
-          //     return scrapeNaukriJobs(keyword);
+          case "naukri":
+            return scrapeNaukriJobs(keyword);
           //   case "glassdoor":
           //     return scrapeGlassdoorJobs(keyword);
           default:
