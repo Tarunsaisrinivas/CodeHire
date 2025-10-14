@@ -4,7 +4,7 @@ export default function Contact() {
       id="contact"
       className="py-20 px-6 md:px-20 bg-gray-100 mt-10 rounded-2xl shadow-sm"
     >
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between md:items-start gap-12">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center md:items-start gap-12">
         {/* Left Section - Text + Form */}
         <div className="w-full md:w-1/2">
           <h3 className="text-4xl font-bold mb-4 text-gray-900">Contact Us</h3>
