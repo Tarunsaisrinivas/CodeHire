@@ -1,6 +1,6 @@
 export default function Contact() {
   return (
-    <section id="contact" className="py-20 px-6 md:px-20 bg-gray-200 mt-6 border-gray-200 rounded-2xl">
+    <section id="contact" className="py-20 px-6 md:px-20 bg-gray-100 mt-6 border-gray-200 rounded-2xl">
       <div className="flex flex-col md:flex-row items-start gap-12">
         <form className="w-full md:w-1/2 space-y-4">
           <h3 className="text-3xl font-semibold mb-4">Contact Us</h3>

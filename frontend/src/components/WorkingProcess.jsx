@@ -51,7 +51,7 @@ const WorkingProcess = () => {
                     return (
                         <div 
                             key = {index}
-                            className={`rounded-2xl border ${isOpen ? 'bg-purple-600 text-white' : 'bg-white text-black'} tansition-all duration-300`} >
+                            className={`rounded-2xl border ${isOpen ? 'bg-purple-400 text-white' : 'bg-white text-black'} tansition-all duration-300`} >
                                 
                             <button 
                                 onClick={() =>toggleStep(index)}
