@@ -4,6 +4,7 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import JobSearch from './pages/JobSearch'
 import ProfileCard from './pages/ProfileCard'
+import CodeEditor from './pages/CodeEditor'
 function App() {
   const [count, setCount] = useState(0)
   const profiles = [
@@ -34,7 +35,7 @@ function App() {
   ];
   return (
     <>
-      <JobSearch/>
+      {/* <JobSearch/> */}
      {/* <div className='min-h-auto bg-gray-50 flex justify-center  p-6'>
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8'>
         {profiles.map((profile, index) => (
@@ -42,7 +43,7 @@ function App() {
         ))}
         </div>
      </div> */}
-      
+      <CodeEditor/>
     </>
   )
 }

@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import JobList from "./JobList";
 import { fetchJobs } from "../api";
+import CodeEditor from "./CodeEditor";
 
 function JobSearch() {
     const [keyword, setKeyword] = useState("");
