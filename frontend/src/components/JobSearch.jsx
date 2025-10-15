@@ -56,7 +56,7 @@ function JobSearch() {
     ];
 
     return (
-        <div className="min-h-screen flex flex-col bg-gray-50">
+        <div className="min-h-full flex flex-col bg-gray-50">
             {/* 🌟 Hero Section */}
             <div className="bg-indigo-500 text-white py-16 md:py-20 px-4 md:px-6 flex flex-col items-center text-center">
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-snug">

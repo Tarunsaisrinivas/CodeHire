@@ -83,9 +83,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Add a test route to verify the route is working
-router.get("/test", (req, res) => {
-  res.json({ message: "Jobs route is working!" });
-});
+
 
 module.exports = router;

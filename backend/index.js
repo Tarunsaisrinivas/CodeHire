@@ -1,18 +1,36 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
+const express = require("express");
+const cors = require("cors");
+const { Server } = require("socket.io");
+const http = require("http");
+const dotenv = require("dotenv");
+const jobRoute = require("./routes/jobRoute");
+const connectDB = require("./utils/db");
+const roomSocketHandler = require("./sockets/roomSocket");
 dotenv.config();
-const jobRoute = require('./routes/jobRoute');
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      "http://localhost:5000",
+    ],
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+  transports: ["websocket", "polling"], // Add this line
+});
 
 app.use(cors());
 app.use(express.json());
 
-app.use("/jobs",jobRoute);
+app.use("/jobs", jobRoute);
+roomSocketHandler(io);
 
-
-
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+const port = process.env.PORT || 5000;
+server.listen(port, () => {
+  connectDB();
+  console.log(`Server is running on port ${port}`);
 });

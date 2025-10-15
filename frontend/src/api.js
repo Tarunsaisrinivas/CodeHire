@@ -9,7 +9,7 @@ export async function fetchJobs(keyword, selectedSites) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
 
-    const res = await fetch("http://localhost:1419/jobs", {
+    const res = await fetch("http://localhost:5000/jobs", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
