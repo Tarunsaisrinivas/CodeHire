@@ -1,0 +1,256 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #171717;
+  --text-primary: #ffffff;
+  --text-secondary: #a3a3a3;
+  --border-color: #404040;
+}
+
+/* ========================
+   🎨 Theme Definitions
+======================== */
+
+/* Dark Theme */
+.theme-dark {
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #171717;
+  --text-primary: #ffffff;
+  --text-secondary: #a3a3a3;
+  --border-color: #404040;
+}
+
+/* Light Theme */
+.theme-light {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --text-primary: #171717;
+  --text-secondary: #525252;
+  --border-color: #d4d4d4;
+}
+
+/* Green Theme */
+.theme-green {
+  --bg-primary: #052e16;
+  --bg-secondary: #14532d;
+  --text-primary: #dcfce7;
+  --text-secondary: #bbf7d0;
+  --border-color: #22c55e;
+}
+
+/* Blue (Indigo) Theme */
+.theme-blue {
+  --bg-primary: #1e1b4b;      /* deep indigo background */
+  --bg-secondary: #312e81;    /* slightly lighter for contrast */
+  --text-primary: #e0e7ff;    /* soft off-white blue tint */
+  --text-secondary: #c7d2fe;  /* lighter indigo text */
+  --border-color: #6366f1;    /* bright indigo border highlight */
+}
+
+/* ========================
+   🧠 Global Styles
+======================== */
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.code-editor {
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+}
+
+/* Custom utility classes */
+.bg-bg-primary {
+  background-color: var(--bg-primary);
+}
+
+.bg-bg-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.text-text-primary {
+  color: var(--text-primary);
+}
+
+.text-text-secondary {
+  color: var(--text-secondary);
+}
+
+.border-border-color {
+  border-color: var(--border-color);
+}
+
+/* ========================
+   🧭 Scrollbar
+======================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* ========================
+   💻 Code Editor & UI
+======================== */
+
+.code-line-numbers {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+/* Animation for user join/leave */
+.user-enter {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Pulse animation for active states */
+.pulse-green {
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ========================
+   📱 Responsive Video Grid
+======================== */
+
+@media (max-width: 768px) {
+  .video-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========================
+   👨‍💻 Monaco Editor
+======================== */
+
+.monaco-editor {
+  font-family: 'Fira Code', 'Monaco', 'Consolas', 'Courier New', monospace !important;
+}
+
+.monaco-editor .view-overlays .current-line {
+  border: none !important;
+  background-color: var(--border-color) !important;
+}
+
+/* Scrollbar for Monaco */
+.monaco-scrollable-element > .scrollbar > .slider {
+  background: var(--border-color) !important;
+}
+
+.monaco-scrollable-element > .scrollbar > .slider:hover {
+  background: var(--text-secondary) !important;
+}
+
+/* Monaco editor for each theme */
+.theme-green .monaco-editor,
+.theme-blue .monaco-editor {
+  background-color: var(--bg-primary) !important;
+}
+
+.theme-green .monaco-editor .margin,
+.theme-blue .monaco-editor .margin {
+  background-color: var(--bg-primary) !important;
+}
+
+/* Syntax highlighting */
+.monaco-editor .mtk1 {
+  color: var(--text-primary) !important;
+}
+
+.monaco-editor .comment {
+  color: var(--text-secondary) !important;
+}
+
+.monaco-editor .string {
+  color: #93c5fd !important; /* light blue strings */
+}
+
+.monaco-editor .number {
+  color: #818cf8 !important; /* soft indigo for numbers */
+}
+
+.monaco-editor .keyword {
+  color: #6366f1 !important; /* primary indigo keyword color */
+}
+
+/* Hover widget */
+.monaco-editor-hover {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Suggest widget */
+.monaco-editor .suggest-widget {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row {
+  color: var(--text-primary) !important;
+}
+
+.monaco-editor .suggest-widget .monaco-list .monaco-list-row.focused {
+  background-color: var(--border-color) !important;
+}
+
+/* ========================
+   📐 Layout / Base
+======================== */
+
+html, body, #root {
+  height: 100%;
+  /* overflow: hidden; */
+}
+
+.min-h-0 { min-height: 0; }
+.min-w-0 { min-width: 0; }
+.flex-shrink-0 { flex-shrink: 0; }
+
+/* Smooth transitions + box model */
+* { box-sizing: border-box; }
+
+/* Code output */
+pre {
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
