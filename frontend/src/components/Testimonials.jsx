@@ -89,13 +89,13 @@ export default function PostivusCarousel() {
   };
 
   return (
-    <section className="py-20 bg-white ">
+    <section id="testimonials" className="py-20 bg-white ">
       {/* Heading */}
-      <div className=" flex mb-12 px-4 gap-6">
+      <div className="px-20 mb-12 px-4 gap-6 text-center">
         <h2 className="text-4xl font-bold text-gray-900">Testimonials</h2>
-        <p className="text-gray-600 mt-3 text-lg max-w-2xl ">
+        <p className="text-gray-600 mt-3 text-lg">
           Hear from developers and teams who trust{" "}
-          <span className="text-purple-600 font-semibold">CodeHire</span>.
+          <span className="text-blue-600 font-semibold">CodeHire</span>.
         </p>
       </div>
 
@@ -114,11 +114,11 @@ export default function PostivusCarousel() {
                 key={t.id}
                 className="w-full  flex-shrink-0 px-4"
               >
-                <div className="bg-gray-50 border-4 border-blue-800 rounded-2xl p-8 sm:p-10 shadow-lg text-center w-full max-w-md mx-auto">
+                <div className="bg-gray-50 border-4 border-[#5465ff] rounded-2xl p-8 sm:p-10 shadow-lg text-center w-full max-w-md mx-auto">
                   <p className="text-gray-700 text-base sm:text-lg leading-relaxed mb-6 italic">
                     "{t.text}"
                   </p>
-                  <h3 className="text-purple-700 font-semibold text-lg sm:text-xl">
+                  <h3 className="text-blue-700 font-semibold text-lg sm:text-xl">
                     {t.name}
                   </h3>
                   <p className="text-gray-500 text-sm mt-1">{t.title}</p>
@@ -132,7 +132,7 @@ export default function PostivusCarousel() {
         <div className="flex justify-center items-center mt-10 space-x-6">
           <button
             onClick={handlePrev}
-            className="p-3 rounded-full border border-gray-400 hover:bg-gray-200 text-xl transition"
+            className="p-3 rounded-full border border-gray-400 hover:bg-[#5465ff] text-xl transition"
             aria-label="Previous testimonial"
           >
             ←
@@ -144,7 +144,7 @@ export default function PostivusCarousel() {
                 key={index}
                 onClick={() => setActiveIndex(index)}
                 className={`w-3 h-3 rounded-full cursor-pointer transition-all ${index === activeIndex
-                  ? "bg-purple-600 scale-110"
+                  ? "bg-blue-600 scale-110"
                   : "bg-gray-400 hover:bg-gray-500"
                   }`}
                 aria-label={`Go to testimonial ${index + 1}`}
@@ -154,7 +154,7 @@ export default function PostivusCarousel() {
 
           <button
             onClick={handleNext}
-            className="p-3 rounded-full border border-gray-400 hover:bg-gray-200 text-xl transition"
+            className="p-3 rounded-full border border-gray-400 hover:bg-[#5465ff] text-xl transition"
             aria-label="Next testimonial"
           >
             →
