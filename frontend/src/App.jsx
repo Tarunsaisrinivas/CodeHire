@@ -7,6 +7,7 @@ import LoginPage from "./components/LoginPage";
 import EditorPage from "./components/EditorPage";
 import JobSearch from "./components/JobSearch";
 import NotFound from "./components/Error";
+import Main from "./components/Home/Main";
 
 // Contexts
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -48,9 +49,13 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="h-screen bg-gradient-to-br from-blue-700 to-blue-400 flex items-center justify-center">
-        <div className="text-white text-lg">Loading...</div>
-      </div>
+      <div className="h-screen  bg-gradient-to-br from-blue-400 to-blue-200 flex flex-col items-center justify-center">
+        <div className="flex  items-center justify-center bg-white/30 backdrop-blur-3xl w-10 h-10 rounded-full">
+          <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div>
+
+        </div>      
+          <p className="text-black">Loading...</p>
+        </div>
     );
   }
 
@@ -63,9 +68,9 @@ function App() {
           <div className="App">
             <Router>
               <Routes>
-                {/* Login Route */}
+                <Route path="/" element={<Main />} />
                 <Route
-                  path="/"
+                  path="/collab"
                   element={
                     !user ? (
                       <LoginPage onJoinRoom={handleJoinRoom} />

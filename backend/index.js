@@ -6,6 +6,8 @@ const dotenv = require("dotenv");
 const jobRoute = require("./routes/jobRoute");
 const connectDB = require("./utils/db");
 const roomSocketHandler = require("./sockets/roomSocket");
+const subscribeRoute = require("./routes/subscribeRoute");
+const contactRoute = require("./routes/contactRoute");
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
@@ -27,6 +29,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/jobs", jobRoute);
+app.use("/api/subscribe", subscribeRoute);
+app.use("/contact", contactRoute);
 roomSocketHandler(io);
 
 const port = process.env.PORT || 5000;
