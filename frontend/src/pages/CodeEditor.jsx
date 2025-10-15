@@ -15,14 +15,25 @@ function CodeEditor() {
     console.error = (...args) => logs.push({ type: "error", message: args.join(" ") });
 
     try {
-      const wrappedCode = `(function(){ ${code} })()`;
-      const result = eval(wrappedCode);
+      // Use Function constructor to get real syntax errors (with line numbers)
+      const fn = new Function(code);
+      const result = fn();
 
       if (result !== undefined && logs.length === 0) {
         logs.push({ type: "return", message: String(result) });
       }
     } catch (err) {
-      logs.push({ type: "error", message: err.message });
+      // Recreate realistic JS engine style error message
+      const formattedError = [
+        "ERROR!",
+        `/tmp/main.js:1`,
+        ...code.split("\n").slice(0, 2), // Show first 2 lines for context
+        " ".repeat(err.columnNumber - 1 || 0) + "^",
+        "",  
+        `${err.name}: ${err.message}`,
+      ].join("\n");
+
+      logs.push({ type: "error", message: formattedError });
     } finally {
       console.log = originalLog;
       console.error = originalError;
@@ -67,22 +78,26 @@ function CodeEditor() {
 
         {/* Output */}
         <div className="w-1/2 bg-black font-mono p-4 overflow-y-auto">
-          <div className="text-white mb-2">Console Output:</div>
+          <div className="text-white mb-2 font-semibold">Console Output:</div>
           <div>
-            {output.map((item, index) => (
-              <div
-                key={index}
-                className={`whitespace-pre-wrap ${
-                  item.type === "log"
-                    ? "text-green-400"
-                    : item.type === "error"
-                    ? "text-red-500"
-                    : "text-blue-400"
-                }`}
-              >
-                {item.message}
-              </div>
-            ))}
+            {output.length === 0 ? (
+              <div className="text-gray-400">No output yet...</div>
+            ) : (
+              output.map((item, index) => (
+                <div
+                  key={index}
+                  className={`whitespace-pre-wrap ${
+                    item.type === "log"
+                      ? "text-green-400"
+                      : item.type === "error"
+                      ? "text-red-500"
+                      : "text-blue-400"
+                  }`}
+                >
+                  {item.message}
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
