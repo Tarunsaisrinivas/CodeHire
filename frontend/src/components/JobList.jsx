@@ -43,7 +43,7 @@ function JobList({ jobs, loading }) {
     };
 
     return (
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col h-full items-center">
             {/* Job Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl px-4">
                 {jobs.slice(0, visibleCount).map((job, idx) => (
