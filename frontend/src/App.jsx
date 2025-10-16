@@ -36,14 +36,14 @@ function App() {
   return (
     <>
       {/* <JobSearch/> */}
-     {/* <div className='min-h-auto bg-gray-50 flex justify-center  p-6'>
+     <div className='min-h-auto bg-gray-50 flex justify-center  p-6'>
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8'>
         {profiles.map((profile, index) => (
           <ProfileCard key={index} {...profile} />
         ))}
         </div>
-     </div> */}
-      <CodeEditor/>
+     </div>
+      {/* <CodeEditor/> */}
     </>
   )
 }
