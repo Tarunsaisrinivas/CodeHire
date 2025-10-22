@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import React, { useState, useEffect } from 'react';
 import { Users, Code, Sparkles } from 'lucide-react';
+
+// Generate consistent userId
+const generateUserId = () => {
+    return 'user_' + Math.random().toString(36).substr(2, 9);
+};
 
 const Login = ({ onJoinRoom }) => {
     const [roomId, setRoomId] = useState('');
@@ -9,7 +13,7 @@ const Login = ({ onJoinRoom }) => {
     const [hasExistingSession, setHasExistingSession] = useState(false);
 
     // Check for existing session on component mount
-    React.useEffect(() => {
+    useEffect(() => {
         const savedUser = localStorage.getItem('codecollab_user');
         if (savedUser) {
             try {
@@ -47,17 +51,27 @@ const Login = ({ onJoinRoom }) => {
             return;
         }
 
+        // ✅ Use persistent userId from localStorage or generate new one
+        const persistentUserId = localStorage.getItem('codecollab_userId') || generateUserId();
+        localStorage.setItem('codecollab_userId', persistentUserId);
+
+        console.log("🚀 Joining room with userId:", persistentUserId);
+
         onJoinRoom({
             roomId: trimmedRoomId,
             userName: trimmedUserName,
-            userId: uuidv4()
+            userId: persistentUserId // ✅ Use persistent userId
         });
     };
 
     const createNewRoom = () => {
-        const newRoomId = uuidv4().slice(0, 8);
+        const newRoomId = Math.random().toString(36).substr(2, 8).toUpperCase();
         setRoomId(newRoomId);
         setIsCreatingNew(true);
+
+        // ✅ Also ensure userId is set when creating new room
+        const persistentUserId = localStorage.getItem('codecollab_userId') || generateUserId();
+        localStorage.setItem('codecollab_userId', persistentUserId);
     };
 
     const clearExistingSession = () => {
@@ -65,6 +79,7 @@ const Login = ({ onJoinRoom }) => {
         setHasExistingSession(false);
         setRoomId('');
         setUserName('');
+        // ✅ Don't remove userId as we want to keep it persistent
     };
 
     return (
@@ -73,7 +88,6 @@ const Login = ({ onJoinRoom }) => {
                 <div className="text-center mb-8">
                     <div className="flex justify-center mb-4">
                         <div className="bg-blue-500 p-3 rounded-full">
-                            {/* <Code className="text-white w-8 h-8" /> */}
                             <img src="/codehire.png" alt="logo" className='invert brightness-100' />
                         </div>
                     </div>
@@ -110,6 +124,8 @@ const Login = ({ onJoinRoom }) => {
                             className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Enter your name"
                             required
+                            minLength={2}
+                            maxLength={50}
                         />
                     </div>
 
@@ -124,6 +140,8 @@ const Login = ({ onJoinRoom }) => {
                             className="w-full px-4 py-3 bg-white/5 border border-blue-500/30 rounded-lg text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Enter room ID"
                             required
+                            minLength={3}
+                            maxLength={20}
                         />
                     </div>
 
@@ -144,6 +162,11 @@ const Login = ({ onJoinRoom }) => {
                         <Sparkles className="w-4 h-4" />
                         Create new room with unique ID
                     </button>
+                </div>
+
+                {/* Debug info - remove in production */}
+                <div className="mt-4 p-2 bg-blue-500/10 rounded text-xs text-blue-300 text-center">
+                    <p>User ID: {localStorage.getItem('codecollab_userId')?.substring(0, 8)}...</p>
                 </div>
             </div>
         </div>

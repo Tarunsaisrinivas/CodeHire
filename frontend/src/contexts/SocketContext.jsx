@@ -5,14 +5,25 @@ import io from "socket.io-client";
 // Create the context with a default value
 export const SocketContext = createContext(undefined);
 
+// Generate consistent userId
+const generateUserId = () => {
+    return 'user_' + Math.random().toString(36).substr(2, 9);
+};
+
 export const SocketProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);
     const [isConnected, setIsConnected] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [userId, setUserId] = useState('');
 
     useEffect(() => {
         console.log("🔄 Initializing socket connection...");
         setIsLoading(true);
+
+        // Get or create userId from localStorage
+        const storedUserId = localStorage.getItem("codecollab_userId") || generateUserId();
+        localStorage.setItem("codecollab_userId", storedUserId);
+        setUserId(storedUserId);
 
         const newSocket = io("http://localhost:5000", {
             transports: ["websocket", "polling"],
@@ -59,7 +70,8 @@ export const SocketProvider = ({ children }) => {
     const contextValue = {
         socket,
         isConnected,
-        isLoading
+        isLoading,
+        userId // Expose userId to components
     };
 
     return (

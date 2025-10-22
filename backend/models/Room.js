@@ -7,6 +7,8 @@ const roomSchema = new mongoose.Schema({
       userId: String,
       name: String,
       socketId: String,
+      isOnline: { type: Boolean, default: true },
+      lastSeen: { type: Date, default: null },
     },
   ],
   code: String,

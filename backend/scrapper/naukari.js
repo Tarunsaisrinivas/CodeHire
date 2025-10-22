@@ -175,6 +175,7 @@ async function scrapeNaukriJobs(keyword) {
           }
         } catch (error) {
           console.log("Error parsing job element");
+          console.log("Error:", error,error.message);
         }
       });
 

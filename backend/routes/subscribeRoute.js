@@ -30,7 +30,6 @@ router.post("/", async (req, res) => {
 
     await Subscriber.create({ email });
 
-    // --- Send Email ---
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {

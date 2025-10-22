@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useSocket } from "../hooks/useSocket";
+import React, { useState, useEffect, useContext } from "react";
+import { SocketContext } from "../contexts/SocketContext";
 import { useTheme } from "../contexts/ThemeContext";
 import Sidebar from "./Sidebar";
 import CodeArea from "./CodeArea";
@@ -7,7 +7,7 @@ import ChatPanel from "./ChatPanel";
 import ThemeSelector from "./ThemeSelector";
 
 const EditorPage = ({ user, onLeaveRoom }) => {
-    const { socket } = useSocket(); // ✅ fixed
+    const { socket, isConnected, isLoading } = useContext(SocketContext);
     const { theme } = useTheme();
 
     const [code, setCode] = useState("// Start coding...");
@@ -20,8 +20,20 @@ const EditorPage = ({ user, onLeaveRoom }) => {
     const [isSocketReady, setIsSocketReady] = useState(false);
     const [connectionError, setConnectionError] = useState(false);
 
+    // Update connection status based on socket state
     useEffect(() => {
-        if (!socket || typeof socket.on !== "function") return; // ✅ guard
+        if (isConnected) {
+            setConnectionStatus("connected");
+            setIsSocketReady(true);
+        } else if (isLoading) {
+            setConnectionStatus("connecting");
+        } else {
+            setConnectionStatus("disconnected");
+        }
+    }, [isConnected, isLoading]);
+
+    useEffect(() => {
+        if (!socket || typeof socket.on !== "function") return;
 
         // Set a timeout for connection
         const timeout = setTimeout(() => {
@@ -35,7 +47,17 @@ const EditorPage = ({ user, onLeaveRoom }) => {
             console.log("✅ Connected to server");
             setConnectionStatus("connected");
             setIsSocketReady(true);
-            socket.emit("join-room", user);
+
+            // Use the userId from localStorage that was set in SocketContext
+            const persistentUserId = localStorage.getItem("codecollab_userId");
+            const userData = {
+                roomId: user.roomId,
+                userName: user.userName,
+                userId: persistentUserId || user.userId
+            };
+
+            console.log("🚀 Joining room with userId:", userData.userId);
+            socket.emit("join-room", userData);
         };
 
         const handleDisconnect = () => {
@@ -51,16 +73,6 @@ const EditorPage = ({ user, onLeaveRoom }) => {
             setMessages(data.messages || []);
         };
 
-        const handleUserJoined = (data) => {
-            console.log("👤 User joined:", data.userName);
-            setUsers(data.users);
-        };
-
-        const handleUserLeft = (data) => {
-            console.log("👤 User left:", data.userId);
-            setUsers(data.users);
-        };
-
         const handleCodeUpdate = (data) => setCode(data.code);
 
         const handleLanguageUpdate = (data) => {
@@ -73,16 +85,6 @@ const EditorPage = ({ user, onLeaveRoom }) => {
 
         const handleCodeRun = (data) => {
             setOutput(data.output);
-            // setMessages((prev) => [
-            //     ...prev,
-            //     {
-            //         userId: "system",
-            //         userName: "System",
-            //         message: `Code executed by ${data.executedBy}`,
-            //         timestamp: new Date(),
-            //         type: "system",
-            //     },
-            // ]);
         };
 
         const handleJoinError = (data) => {
@@ -98,21 +100,19 @@ const EditorPage = ({ user, onLeaveRoom }) => {
             setConnectionError(true);
         };
 
-        // ✅ Event listeners
+        // ✅ Event listeners - REMOVED user-joined and user-left
         socket.on("connect", handleConnect);
         socket.on("disconnect", handleDisconnect);
         socket.on("connect_error", handleConnectError);
         socket.on("room-state", handleRoomState);
-        socket.on("user-joined", handleUserJoined);
-        socket.on("user-left", handleUserLeft);
         socket.on("code-update", handleCodeUpdate);
         socket.on("language-update", handleLanguageUpdate);
         socket.on("chat-message", handleChatMessage);
         socket.on("code-run", handleCodeRun);
         socket.on("join-error", handleJoinError);
 
+        // If already connected, join room immediately
         if (socket.connected) {
-            setIsSocketReady(true);
             handleConnect();
         }
 
@@ -123,8 +123,6 @@ const EditorPage = ({ user, onLeaveRoom }) => {
             socket.off("disconnect", handleDisconnect);
             socket.off("connect_error", handleConnectError);
             socket.off("room-state", handleRoomState);
-            socket.off("user-joined", handleUserJoined);
-            socket.off("user-left", handleUserLeft);
             socket.off("code-update", handleCodeUpdate);
             socket.off("language-update", handleLanguageUpdate);
             socket.off("chat-message", handleChatMessage);
@@ -132,49 +130,47 @@ const EditorPage = ({ user, onLeaveRoom }) => {
             socket.off("join-error", handleJoinError);
         };
     }, [socket, user, onLeaveRoom, isSocketReady]);
-    // 🔹 Add this just after your other useEffects
+
+    // 🔹 Auto-reload on connection error
     useEffect(() => {
         if (connectionError) {
             const timer = setTimeout(() => {
                 window.location.reload();
-            }, 4000); // reload after 1 second
+            }, 1000);
 
             return () => clearTimeout(timer);
         }
     }, [connectionError]);
 
-    if (!socket || !isSocketReady) {
+    // Show loading/error states
+    if (isLoading || !socket) {
         return (
-            <div className="h-screen  bg-gradient-to-br from-blue-900 to-black flex items-center justify-center">
+            <div className="h-screen bg-gradient-to-br from-blue-900 to-black flex items-center justify-center">
                 <div className="text-center">
-                    {connectionError ? (
-                        <>
-                            <div className="text-red-500 text-6xl mb-4">⚠️</div>
-                            <div className="text-white text-lg mb-2">Connection Failed</div>
-                            <div className="text-red-300 text-xl mb-4">
-                                Cannot connect to server
-                            </div>
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200"
-                            >
-                                Retry Connection
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                            <div className="text-white text-lg mb-2">
-                                Connecting to server...
-                            </div>
-                            {/* <div className="text-green-300 text-sm">
-                                Make sure the backend server is running on port 5000
-                            </div>
-                            <div className="text-green-400 text-xs mt-2">
-                                Run: cd backend && npm start
-                            </div> */}
-                        </>
-                    )}
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <div className="text-white text-lg mb-2">
+                        Initializing connection...
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (connectionError) {
+        return (
+            <div className="h-screen bg-gradient-to-br from-blue-900 to-black flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-red-500 text-6xl mb-4">⚠️</div>
+                    <div className="text-white text-lg mb-2">Connection Failed</div>
+                    <div className="text-red-300 text-xl mb-4">
+                        Cannot connect to server
+                    </div>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200"
+                    >
+                        Retry Connection
+                    </button>
                 </div>
             </div>
         );
@@ -238,8 +234,8 @@ const EditorPage = ({ user, onLeaveRoom }) => {
                             >
                                 <div
                                     className={`w-2 h-2 rounded-full ${connectionStatus === "connected"
-                                            ? "bg-blue-500 animate-pulse"
-                                            : "bg-red-500"
+                                        ? "bg-blue-500 animate-pulse"
+                                        : "bg-red-500"
                                         }`}
                                 ></div>
                                 <span className="text-sm font-medium capitalize">
@@ -302,7 +298,6 @@ const EditorPage = ({ user, onLeaveRoom }) => {
                 )}
             </div>
         </div>
-
     );
 };
 

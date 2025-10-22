@@ -21,7 +21,7 @@ async function scrapeGlassdoorJobs(keyword) {
     )}`;
     console.log("🔍 Navigating to Glassdoor:", url);
 
-    await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 90000 });
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // Try to get all job information using a different approach
@@ -58,10 +58,22 @@ async function scrapeGlassdoorJobs(keyword) {
                 line.includes("Location") || /[A-Z][a-z]+, [A-Z]{2}/.test(line)
             ) || "N/A";
 
-          // Find link
+          // ✅ FIXED LINK HANDLING
           let link = "#";
-          const linkEl = card.querySelector('a[href*="/Job/"]');
-          if (linkEl) link = linkEl.href;
+          const linkEl = card.querySelector(
+            'a[href*="/Job/"], a[href*="partner/jobListing"]'
+          );
+
+          if (linkEl) {
+            const href = linkEl.getAttribute("href");
+            if (href.startsWith("http")) {
+              link = href;
+            } else if (href.startsWith("/")) {
+              link = `https://www.glassdoor.co.in${href}`;
+            } else {
+              link = `https://www.glassdoor.co.in/${href}`;
+            }
+          }
 
           if (title !== "N/A" && !title.includes("Sign In")) {
             jobs.push({
@@ -69,9 +81,7 @@ async function scrapeGlassdoorJobs(keyword) {
               company: company.replace("Company", "").trim(),
               location: location.replace("Location", "").trim(),
               salary: "Not specified",
-              link: link.startsWith("/")
-                ? `https://www.glassdoor.co.in${link}`
-                : link,
+              link,
               source: "glassdoor",
             });
           }

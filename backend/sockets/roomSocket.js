@@ -28,7 +28,15 @@ module.exports = (io) => {
         if (!room) {
           room = new Room({
             roomId,
-            users: [{ userId, name: userName, socketId: socket.id }],
+            users: [
+              {
+                userId,
+                name: userName,
+                socketId: socket.id,
+                isOnline: true,
+                lastSeen: null,
+              },
+            ],
             code: getDefaultCode("javascript"),
             language: "javascript",
             theme: "dark",
@@ -48,12 +56,37 @@ module.exports = (io) => {
               message: "Room is full (max 10 users)",
             });
 
-          room.users = room.users.filter((u) => u.userId !== userId);
-          room.users.push({ userId, name: userName, socketId: socket.id });
+          // ✅ FIXED: Find and UPDATE the existing user instead of creating duplicate
+          const existingUserIndex = room.users.findIndex(
+            (u) => u.userId === userId
+          );
+
+          if (existingUserIndex >= 0) {
+            // ✅ Update the existing user - this is the key fix
+            room.users[existingUserIndex].name = userName;
+            room.users[existingUserIndex].socketId = socket.id;
+            room.users[existingUserIndex].isOnline = true;
+            room.users[existingUserIndex].lastSeen = null;
+
+            console.log(`🔄 Updated existing user: ${userName} (${userId})`);
+          } else {
+            // Only add new user if they don't exist
+            room.users.push({
+              userId,
+              name: userName,
+              socketId: socket.id,
+              isOnline: true,
+              lastSeen: null,
+            });
+            console.log(`👤 Added new user: ${userName} (${userId})`);
+          }
+
           room.messages.push({
             userId: "system",
             userName: "System",
-            message: `${userName} joined the room`,
+            message: `${userName} ${
+              existingUserIndex >= 0 ? "rejoined" : "joined"
+            } the room`,
             type: "system",
           });
           await room.save();
@@ -62,15 +95,24 @@ module.exports = (io) => {
         socket.join(roomId);
         activeUsers.set(socket.id, { roomId, userName, userId });
 
+        // ✅ Get the updated room data to send to clients
+        const updatedRoom = await Room.findOne({ roomId });
+
         io.to(roomId).emit("room-state", {
-          code: room.code,
-          language: room.language,
-          theme: room.theme,
-          users: room.users,
-          messages: room.messages,
+          code: updatedRoom.code,
+          language: updatedRoom.language,
+          theme: updatedRoom.theme,
+          users: updatedRoom.users,
+          messages: updatedRoom.messages,
         });
 
-        console.log(`👤 ${userName} joined room ${roomId}`);
+        console.log(
+          `👤 ${userName} ${
+            room.users.findIndex((u) => u.userId === userId) >= 0
+              ? "rejoined"
+              : "joined"
+          } room ${roomId}`
+        );
       } catch (error) {
         console.error("Error joining room:", error);
         socket.emit("join-error", { message: "Failed to join room" });
@@ -195,7 +237,14 @@ module.exports = (io) => {
         const room = await Room.findOne({ roomId: user.roomId });
         if (!room) return;
 
-        room.users = room.users.filter((u) => u.socketId !== socket.id);
+        // ✅ FIXED: Only mark the specific user offline
+        const userIndex = room.users.findIndex((u) => u.userId === user.userId);
+        if (userIndex >= 0) {
+          room.users[userIndex].isOnline = false;
+          room.users[userIndex].lastSeen = new Date();
+          room.users[userIndex].socketId = null;
+        }
+
         room.messages.push({
           userId: "system",
           userName: "System",
@@ -205,17 +254,15 @@ module.exports = (io) => {
 
         await room.save();
 
-        socket.to(user.roomId).emit("user-left", {
-          userId: user.userId,
-          users: room.users,
-        });
+        // ✅ Get the updated room data to send to clients
+        const updatedRoom = await Room.findOne({ roomId: user.roomId });
 
-        socket.to(user.roomId).emit("chat-message", {
-          userId: "system",
-          userName: "System",
-          message: `${user.userName} left the room`,
-          timestamp: new Date(),
-          type: "system",
+        io.to(user.roomId).emit("room-state", {
+          code: updatedRoom.code,
+          language: updatedRoom.language,
+          theme: updatedRoom.theme,
+          users: updatedRoom.users,
+          messages: updatedRoom.messages,
         });
 
         activeUsers.delete(socket.id);

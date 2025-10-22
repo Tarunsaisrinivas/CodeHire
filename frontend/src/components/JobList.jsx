@@ -81,9 +81,9 @@ function JobList({ jobs, loading }) {
             {visibleCount < jobs.length && (
                 <button
                     onClick={handleLoadMore}
-                    className="mt-8 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
+                    className="mt-8 px-6 py-3 bg-gray-700 cursor-pointer text-white font-medium rounded-lg hover:bg-gray-800 transition"
                 >
-                    Load More
+                    Show More
                 </button>
             )}
         </div>
