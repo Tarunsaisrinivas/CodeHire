@@ -3,14 +3,23 @@ import MonacoEditor from './MonacoEditor';
 import { useSocket } from "../hooks/useSocket";
 import { Play, Square, Download, Copy, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
 
-const CodeArea = ({ code, language, onCodeChange, onRunCode, output }) => {
+const CodeArea = ({ code, language, onCodeChange, onRunCode, output}) => {
     const { socket } = useSocket();
+
     const [localCode, setLocalCode] = useState(code);
     const [isTyping, setIsTyping] = useState(false);
     const [lastChangeTime, setLastChangeTime] = useState(0);
     const [isRunning, setIsRunning] = useState(false);
     const [isOutputOpen, setIsOutputOpen] = useState(false);
     const outputRef = useRef(null);
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem("codecollab_user");
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        }
+    }, []);
 
     // Sync code with parent
     useEffect(() => {
@@ -300,7 +309,7 @@ const CodeArea = ({ code, language, onCodeChange, onRunCode, output }) => {
                     {isTyping && (
                         <div className="flex items-center gap-2 text-text-secondary text-sm">
                             <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                            <span>Typing...</span>
+                            <span>Typing... {user?.userName}</span>
                         </div>
                     )}
                 </div>
@@ -446,7 +455,7 @@ const CodeArea = ({ code, language, onCodeChange, onRunCode, output }) => {
                 <div className="flex items-center gap-4 text-xs">
                     <span className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${isTyping ? 'bg-yellow-500 animate-pulse' : 'bg-blue-500'}`}></div>
-                        {isTyping ? 'Typing...' : 'Synced'}
+                        {isTyping ? 'Typing... ' : 'Synced'}
                     </span>
                 </div>
             </div>
