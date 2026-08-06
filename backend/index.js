@@ -19,6 +19,7 @@ const io = new Server(server, {
       "http://127.0.0.1:5173",
       "http://localhost:5000",
       "https://codehire-oaod.onrender.com",
+      "code-hire-c44s.vercel.app",
     ],
     methods: ["GET", "POST"],
     credentials: true,
