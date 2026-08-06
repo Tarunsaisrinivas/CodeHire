@@ -25,7 +25,7 @@ export const SocketProvider = ({ children }) => {
         localStorage.setItem("codecollab_userId", storedUserId);
         setUserId(storedUserId);
 
-        const newSocket = io("http://localhost:5000", {
+        const newSocket = io("https://codehire-oaod.onrender.com", {
             transports: ["websocket", "polling"],
             timeout: 10000,
             reconnectionAttempts: 3,

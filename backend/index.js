@@ -18,6 +18,7 @@ const io = new Server(server, {
       "http://localhost:5173",
       "http://127.0.0.1:5173",
       "http://localhost:5000",
+      "https://codehire-oaod.onrender.com",
     ],
     methods: ["GET", "POST"],
     credentials: true,
