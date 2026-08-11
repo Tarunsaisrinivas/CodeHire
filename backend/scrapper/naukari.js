@@ -1,20 +1,16 @@
-const puppeteer = require("puppeteer-core");
-const chromium = require("@sparticuz/chromium");
+const puppeteer = require("puppeteer");
 
 async function scrapeNaukriJobs(keyword) {
-const browser = await puppeteer.launch({
-  args: chromium.args,
-  defaultViewport: chromium.defaultViewport,
-  executablePath: await chromium.executablePath(),
-  headless: chromium.headless,
-  ignoreHTTPSErrors: true,
-});
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
 
   const page = await browser.newPage();
 
   // Set a realistic user agent
   await page.setUserAgent(
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
   );
 
   const url = `https://www.naukri.com/${keyword.replace(/\s+/g, "-")}-jobs`;
@@ -56,7 +52,7 @@ const browser = await puppeteer.launch({
         // Fallback: look for any elements that might contain job info
         const allLinks = document.querySelectorAll('a[href*="/job-listings"]');
         jobElements = Array.from(allLinks).map(
-          (link) => link.closest("div, article, section") || link.parentElement,
+          (link) => link.closest("div, article, section") || link.parentElement
         );
       }
 
@@ -179,7 +175,7 @@ const browser = await puppeteer.launch({
           }
         } catch (error) {
           console.log("Error parsing job element");
-          console.log("Error:", error, error.message);
+          console.log("Error:", error,error.message);
         }
       });
 
@@ -190,7 +186,7 @@ const browser = await puppeteer.launch({
 
     if (jobs.length === 0) {
       console.log(
-        "❌ No jobs found on Naukri. The site structure may have changed.",
+        "❌ No jobs found on Naukri. The site structure may have changed."
       );
     } else {
       console.log(`✅ Naukri jobs scraped: ${jobs.length}`);

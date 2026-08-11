@@ -1,26 +1,23 @@
 // Alternative Glassdoor scraper - more aggressive
-const puppeteer = require("puppeteer-core");
-const chromium = require("@sparticuz/chromium");
-async function scrapeGlassdoorJobs(keyword) {
- let browser;
+const puppeteer = require("puppeteer");
 
-try {
-  browser = await puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
-    executablePath: await chromium.executablePath(),
-    headless: chromium.headless,
-    ignoreHTTPSErrors: true,
-  });
+async function scrapeGlassdoorJobs(keyword) {
+  let browser;
+
+  try {
+    browser = await puppeteer.launch({
+      headless: "new", // Set to true to see what's happening
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
 
     const page = await browser.newPage();
     await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     );
     await page.setViewport({ width: 1280, height: 800 });
 
     const url = `https://www.glassdoor.co.in/Job/jobs.htm?sc.keyword=${encodeURIComponent(
-      keyword,
+      keyword
     )}`;
     console.log("🔍 Navigating to Glassdoor:", url);
 
@@ -33,7 +30,7 @@ try {
 
       // Get all job cards using multiple possible selectors
       const jobCards = document.querySelectorAll(
-        '.jobCard, [data-test="job-card"], .react-job-listing, [class*="job-listing"]',
+        '.jobCard, [data-test="job-card"], .react-job-listing, [class*="job-listing"]'
       );
 
       jobCards.forEach((card, index) => {
@@ -53,18 +50,18 @@ try {
             "N/A";
           let company =
             lines.find(
-              (line) => line.includes("Company") || line.length < 50,
+              (line) => line.includes("Company") || line.length < 50
             ) || "Unknown";
           let location =
             lines.find(
               (line) =>
-                line.includes("Location") || /[A-Z][a-z]+, [A-Z]{2}/.test(line),
+                line.includes("Location") || /[A-Z][a-z]+, [A-Z]{2}/.test(line)
             ) || "N/A";
 
           // ✅ FIXED LINK HANDLING
           let link = "#";
           const linkEl = card.querySelector(
-            'a[href*="/Job/"], a[href*="partner/jobListing"]',
+            'a[href*="/Job/"], a[href*="partner/jobListing"]'
           );
 
           if (linkEl) {

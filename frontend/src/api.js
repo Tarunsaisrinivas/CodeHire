@@ -19,7 +19,7 @@ export async function fetchJobs(keyword, selectedSites) {
   try {
 
     const response = await fetch(
-      "https://code-hire-xrhe.vercel.app/jobs",
+      "http://localhost:5000/jobs",
       {
         method: "POST",
 

@@ -1,14 +1,10 @@
-const puppeteer = require("puppeteer-core");
-const chromium = require("@sparticuz/chromium");
+const puppeteer = require("puppeteer");
 
 async function scrapeLinkedInJobs(keyword) {
   const browser = await puppeteer.launch({
-  args: chromium.args,
-  defaultViewport: chromium.defaultViewport,
-  executablePath: await chromium.executablePath(),
-  headless: chromium.headless,
-  ignoreHTTPSErrors: true,
-});
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
 
   const page = await browser.newPage();
 
@@ -16,12 +12,12 @@ async function scrapeLinkedInJobs(keyword) {
   await page.setUserAgent(
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
       "AppleWebKit/537.36 (KHTML, like Gecko) " +
-      "Chrome/115 Safari/537.36",
+      "Chrome/115 Safari/537.36"
   );
 
   // * Navigate to LinkedIn job search page
   const searchUrl = `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(
-    keyword,
+    keyword
   )}`;
   console.log("🔍 Navigating to:", searchUrl);
 
@@ -35,7 +31,7 @@ async function scrapeLinkedInJobs(keyword) {
   // * Extract job data including company logos
   const jobs = await page.evaluate(() => {
     return Array.from(
-      document.querySelectorAll("ul.jobs-search__results-list li"),
+      document.querySelectorAll("ul.jobs-search__results-list li")
     )
       .slice(0, 15)
       .map((el) => {
