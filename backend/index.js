@@ -31,7 +31,12 @@ const io = new Server(server, {
 
 app.use(cors());
 app.use(express.json());
-
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Code Hire API is running",
+  });
+});
 app.use("/jobs", jobRoute);
 app.use("/api/subscribe", subscribeRoute);
 app.use("/contact", contactRoute);
