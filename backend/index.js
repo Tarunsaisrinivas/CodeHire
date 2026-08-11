@@ -1,87 +1,44 @@
+const express = require("express");
+const cors = require("cors");
+const { Server } = require("socket.io");
 const http = require("http");
 const dotenv = require("dotenv");
-
-dotenv.config();
-
-const app = require("./app");
-
+const jobRoute = require("./routes/jobRoute");
 const connectDB = require("./utils/db");
-
-const { Server } = require("socket.io");
-
 const roomSocketHandler = require("./sockets/roomSocket");
-
-
-// ==========================================
-// HTTP SERVER
-// ==========================================
-
+const subscribeRoute = require("./routes/subscribeRoute");
+const contactRoute = require("./routes/contactRoute");
+dotenv.config();
+const app = express();
 const server = http.createServer(app);
-
-
-// ==========================================
-// SOCKET.IO
-// ==========================================
-
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "http://127.0.0.1:5173",
-  "https://code-hire-beryl.vercel.app",
-  "https://codehire-oaod.onrender.com",
-  "https://code-hire-c44s.vercel.app",
-  "https://code-hire-xrhe.vercel.app",
-];
-
-
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      "http://localhost:5000",
+      "https://codehire-oaod.onrender.com",
+      "https://code-hire-c44s.vercel.app",
+      "https://code-hire-beryl.vercel.app",
+      "https://code-hire-xrhe.vercel.app"
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
+  transports: ["websocket", "polling"], // Add this line
 });
 
+app.use(cors());
+app.use(express.json());
 
+app.use("/jobs", jobRoute);
+app.use("/api/subscribe", subscribeRoute);
+app.use("/contact", contactRoute);
 roomSocketHandler(io);
 
-
-// ==========================================
-// LOCAL SERVER
-// ==========================================
-
-const PORT = process.env.PORT || 5000;
-
-
-// Only start listen locally.
-// Vercel handles the server itself.
-
-if (process.env.NODE_ENV !== "production") {
-
-  server.listen(PORT, async () => {
-
-    try {
-
-      await connectDB();
-
-      console.log(
-        `Server running at http://localhost:${PORT}`
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Database connection failed:",
-        error
-      );
-
-    }
-
-  });
-
-}
-
-
-// Export Express app for Vercel
-
-module.exports = app;
+const port = process.env.PORT || 5000;
+server.listen(port, () => {
+  connectDB();
+  console.log(`Server is running on port ${port}`);
+});
