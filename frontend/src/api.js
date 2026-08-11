@@ -1,44 +1,87 @@
 export async function fetchJobs(keyword, selectedSites) {
-  // Validate inputs
-  if (!keyword || !selectedSites || selectedSites.length === 0) {
+
+  if (
+    !keyword ||
+    !selectedSites ||
+    selectedSites.length === 0
+  ) {
     console.error("❌ Missing keyword or sites");
     return [];
   }
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
+  const controller = new AbortController();
 
-    const res = await fetch("https://code-hire-xrhe.vercel.app/jobs", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        keyword: keyword.trim(),
-        sites: selectedSites,
-      }),
-      signal: controller.signal,
-    });
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, 45000);
+
+
+  try {
+
+    const response = await fetch(
+      "https://code-hire-xrhe.vercel.app/jobs",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+
+        body: JSON.stringify({
+          keyword: keyword.trim(),
+          sites: selectedSites,
+        }),
+
+        signal: controller.signal,
+      }
+    );
+
+
+    if (!response.ok) {
+
+      const errorData =
+        await response
+          .json()
+          .catch(() => ({}));
+
+      throw new Error(
+        errorData.message ||
+        `HTTP error: ${response.status}`
+      );
+    }
+
+
+    const data = await response.json();
+
+    return Array.isArray(data)
+      ? data
+      : [];
+
+
+  } catch (error) {
+
+    console.error(
+      "❌ Error fetching jobs:",
+      error.message
+    );
+
+
+    if (error.name === "AbortError") {
+
+      console.error(
+        "⏰ Job request timed out"
+      );
+
+    }
+
+
+    return [];
+
+
+  } finally {
 
     clearTimeout(timeoutId);
 
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${res.status}`);
-    }
-
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  } catch (err) {
-    console.error("❌ Error fetching jobs:", err.message);
-
-    if (err.name === "AbortError") {
-      console.error("⏰ Request timeout");
-      return [];
-    }
-
-    return [];
   }
 }
