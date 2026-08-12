@@ -8,38 +8,52 @@ const connectDB = require("./utils/db");
 const roomSocketHandler = require("./sockets/roomSocket");
 const subscribeRoute = require("./routes/subscribeRoute");
 const contactRoute = require("./routes/contactRoute");
+
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
+
+// ✅ Define CORS options
+const corsOptions = {
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5000",
+    "https://codehire-oaod.onrender.com",
+    "https://code-hire-c44s.vercel.app",
+    "https://code-hire-beryl.vercel.app",
+    "https://code-hire-xrhe.vercel.app",
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+};
+
+// ✅ Apply CORS middleware to Express
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Handle preflight requests
+
+// ✅ Socket.IO with CORS
 const io = new Server(server, {
-  cors: {
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-      "http://localhost:5000",
-      "https://codehire-oaod.onrender.com",
-      "https://code-hire-c44s.vercel.app",
-      "https://code-hire-beryl.vercel.app",
-      "https://code-hire-xrhe.vercel.app"
-    ],
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-  transports: ["websocket", "polling"], // Add this line
+  cors: corsOptions,
+  transports: ["websocket", "polling"],
 });
 
-app.use(cors());
 app.use(express.json());
+
+// ✅ Routes
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
     message: "Code Hire API is running",
   });
 });
+
 app.use("/jobs", jobRoute);
 app.use("/api/subscribe", subscribeRoute);
 app.use("/contact", contactRoute);
+
+// ✅ Socket handler
 roomSocketHandler(io);
 
 const port = process.env.PORT || 5000;
