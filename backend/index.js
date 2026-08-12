@@ -24,6 +24,7 @@ const corsOptions = {
     "https://code-hire-c44s.vercel.app",
     "https://code-hire-beryl.vercel.app",
     "https://code-hire-xrhe.vercel.app",
+    "https://codehire-oaod.onrender.com",
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
