@@ -31,7 +31,7 @@ const corsOptions = {
 
 // ✅ Apply CORS middleware to Express
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // Handle preflight requests
+app.options(/.*/, cors(corsOptions));
 
 // ✅ Socket.IO with CORS
 const io = new Server(server, {
