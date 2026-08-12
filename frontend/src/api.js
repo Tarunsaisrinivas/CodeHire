@@ -11,7 +11,7 @@ export async function fetchJobs(keyword, selectedSites) {
   }, 45000);
 
   try {
-    const response = await fetch("https://code-hire-xrhe.vercel.app/jobs", {
+    const response = await fetch("https://codehire-oaod.onrender.com/jobs", {
       method: "POST",
 
       headers: {
