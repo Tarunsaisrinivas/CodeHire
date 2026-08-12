@@ -1,72 +1,105 @@
-const puppeteer = require("puppeteer");
+const launchBrowser = require("../utils/browser");
 
 async function scrapeLinkedInJobs(keyword) {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  let browser;
 
-  const page = await browser.newPage();
+  try {
+    browser = await launchBrowser();
 
-  // * Set User-Agent to avoid bot detection
-  await page.setUserAgent(
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-      "AppleWebKit/537.36 (KHTML, like Gecko) " +
-      "Chrome/115 Safari/537.36"
-  );
+    const page = await browser.newPage();
 
-  // * Navigate to LinkedIn job search page
-  const searchUrl = `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(
-    keyword
-  )}`;
-  console.log("🔍 Navigating to:", searchUrl);
+    // Set User-Agent
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+        "AppleWebKit/537.36 (KHTML, like Gecko) " +
+        "Chrome/115 Safari/537.36"
+    );
 
-  await page.goto(searchUrl, { waitUntil: "networkidle2", timeout: 60000 });
+    const searchUrl = `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(
+      keyword
+    )}`;
 
-  // * Wait for job results
-  await page.waitForSelector("ul.jobs-search__results-list li", {
-    timeout: 15000,
-  });
+    console.log("🔍 Navigating to LinkedIn:", searchUrl);
 
-  // * Extract job data including company logos
-  const jobs = await page.evaluate(() => {
-    return Array.from(
-      document.querySelectorAll("ul.jobs-search__results-list li")
-    )
-      .slice(0, 15)
-      .map((el) => {
-        const title = el
-          .querySelector(".base-search-card__title")
-          ?.innerText.trim();
-        const company = el
-          .querySelector(".base-search-card__subtitle")
-          ?.innerText.trim();
-        const location = el
-          .querySelector(".job-search-card__location")
-          ?.innerText.trim();
-        const link = el.querySelector("a.base-card__full-link")?.href;
-        const logo =
-          el
-            .querySelector(".artdeco-entity-image")
-            ?.getAttribute("data-delayed-url") ||
-          el.querySelector(".artdeco-entity-image")?.getAttribute("src") ||
-          null;
+    await page.goto(searchUrl, {
+      waitUntil: "networkidle2",
+      timeout: 60000,
+    });
 
-        return {
-          title,
-          company,
-          location,
-          link,
-          logo,
-          source: "linkedin",
-        };
-      });
-  });
+    // Wait for job results
+    await page.waitForSelector(
+      "ul.jobs-search__results-list li",
+      {
+        timeout: 15000,
+      }
+    );
 
-  await browser.close();
+    const jobs = await page.evaluate(() => {
+      return Array.from(
+        document.querySelectorAll(
+          "ul.jobs-search__results-list li"
+        )
+      )
+        .slice(0, 15)
+        .map((el) => {
+          const title = el
+            .querySelector(".base-search-card__title")
+            ?.innerText.trim();
 
-  console.log(`✅ Scraped ${jobs.length} LinkedIn jobs`);
-  return jobs;
+          const company = el
+            .querySelector(".base-search-card__subtitle")
+            ?.innerText.trim();
+
+          const location = el
+            .querySelector(".job-search-card__location")
+            ?.innerText.trim();
+
+          const link = el.querySelector(
+            "a.base-card__full-link"
+          )?.href;
+
+          const logo =
+            el
+              .querySelector(".artdeco-entity-image")
+              ?.getAttribute("data-delayed-url") ||
+            el
+              .querySelector(".artdeco-entity-image")
+              ?.getAttribute("src") ||
+            null;
+
+          return {
+            title,
+            company,
+            location,
+            link,
+            logo,
+            source: "linkedin",
+          };
+        });
+    });
+
+    console.log(`✅ Scraped ${jobs.length} LinkedIn jobs`);
+
+    return jobs;
+  } catch (error) {
+    console.log(
+      "❌ Error scraping LinkedIn:",
+      error.message
+    );
+
+    return [];
+  } finally {
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (error) {
+        console.log(
+          "⚠️ Error closing LinkedIn browser:",
+          error.message
+        );
+      }
+    }
+  }
 }
 
 module.exports = scrapeLinkedInJobs;
