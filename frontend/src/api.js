@@ -11,7 +11,7 @@ export async function fetchJobs(keyword, selectedSites) {
   }, 120000);
 
   try {
-    const response = await fetch("https://codehire-oaod.onrender.com/jobs", {
+    const response = await fetch("http://localhost:5000/jobs", {
       method: "POST",
 
       headers: {
