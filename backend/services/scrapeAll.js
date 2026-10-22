@@ -1,14 +1,18 @@
 const launchBrowser = require("../utils/browser");
-const scrapeNaukriJobs = require("../scrapers/naukri");
-const scrapeLinkedInJobs = require("../scrapers/linkedin");
-const scrapeGlassdoorJobs = require("../scrapers/glassdoor");
+const scrapeNaukriJobs = require("../scrapper/naukari");
+const scrapeLinkedInJobs = require("../scrapper/linkedin");
+const scrapeGlassdoorJobs = require("../scrapper/glassdoor");
 
-// Simple in-memory cache so repeat searches don't re-scrape (30 min)
 const CACHE_TTL_MS = 30 * 60 * 1000;
 const cache = new Map();
 
-// Set PARALLEL_SCRAPE=true only if your server has 2GB+ RAM or you use Browserless
-const PARALLEL = process.env.PARALLEL_SCRAPE === "true";
+// Naukri + Glassdoor use the residential proxy (LinkedIn works without it).
+// Turn off with USE_RESIDENTIAL_PROXY=false
+const USE_PROXY = process.env.USE_RESIDENTIAL_PROXY !== "false";
+
+async function safeClose(browser) {
+  if (browser) await browser.close().catch(() => {});
+}
 
 async function scrapeAll(keyword) {
   const key = keyword.trim().toLowerCase();
@@ -19,34 +23,26 @@ async function scrapeAll(keyword) {
     return hit.jobs;
   }
 
-  const browser = await launchBrowser();
+  let plainBrowser;
+  let proxyBrowser;
 
   try {
-    let results;
+    // LinkedIn: normal browser (already working)
+    plainBrowser = await launchBrowser();
+    const linkedin = await scrapeLinkedInJobs(keyword, plainBrowser);
 
-    if (PARALLEL) {
-      const settled = await Promise.allSettled([
-        scrapeNaukriJobs(keyword, browser),
-        scrapeLinkedInJobs(keyword, browser),
-        scrapeGlassdoorJobs(keyword, browser),
-      ]);
-      results = settled.map((r) => (r.status === "fulfilled" ? r.value : []));
-    } else {
-      results = [
-        await scrapeNaukriJobs(keyword, browser),
-        await scrapeLinkedInJobs(keyword, browser),
-        await scrapeGlassdoorJobs(keyword, browser),
-      ];
-    }
+    // Naukri + Glassdoor: separate browser through the residential proxy
+    proxyBrowser = await launchBrowser({ residentialProxy: USE_PROXY });
+    const naukri = await scrapeNaukriJobs(keyword, proxyBrowser);
+    const glassdoor = await scrapeGlassdoorJobs(keyword, proxyBrowser);
 
-    const jobs = results.flat();
+    const jobs = [...naukri, ...linkedin, ...glassdoor];
 
-    // Don't cache empty results (likely a block), so the next try can succeed
     if (jobs.length > 0) cache.set(key, { time: Date.now(), jobs });
-
     return jobs;
   } finally {
-    await browser.close().catch(() => {});
+    await safeClose(plainBrowser);
+    await safeClose(proxyBrowser);
   }
 }
 

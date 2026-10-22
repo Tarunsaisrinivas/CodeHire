@@ -2,13 +2,25 @@ const puppeteer = require("puppeteer-core");
 
 const isProduction = process.env.NODE_ENV === "production";
 
-async function launchBrowser() {
-  // Option A: hosted browser (Render + Vercel, best against IP blocks)
+/**
+ * options.residentialProxy = true -> route traffic through Browserless's
+ * residential proxy pool (only applies when BROWSERLESS_TOKEN is set).
+ * Uses more of your Browserless quota, so only use it for sites that block you.
+ */
+async function launchBrowser({ residentialProxy = false } = {}) {
+  // Option A: hosted browser (Render + Vercel)
   if (process.env.BROWSERLESS_TOKEN) {
-    console.log("🌐 Connecting to Browserless");
-    return await puppeteer.connect({
-      browserWSEndpoint: `wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}&stealth=true`,
-    });
+    let endpoint = `wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}&stealth=true`;
+
+    if (residentialProxy) {
+      const country = process.env.PROXY_COUNTRY || "in";
+      endpoint += `&proxy=residential&proxyCountry=${country}`;
+    }
+
+    console.log(
+      `🌐 Connecting to Browserless${residentialProxy ? " (residential proxy)" : ""}`,
+    );
+    return await puppeteer.connect({ browserWSEndpoint: endpoint });
   }
 
   // Option B: Chrome inside Docker (Render)
@@ -28,7 +40,7 @@ async function launchBrowser() {
     });
   }
 
-  // Local development: full puppeteer with bundled Chrome
+  // Local development
   console.log("🖥️ Local environment");
   const localPuppeteer = require("puppeteer");
   return await localPuppeteer.launch({
