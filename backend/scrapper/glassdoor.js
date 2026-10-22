@@ -1,138 +1,132 @@
-// Alternative Glassdoor scraper - more aggressive
-
 const launchBrowser = require("../utils/browser");
+const { createPage, logPageState } = require("../utils/pageSetup");
 
-async function scrapeGlassdoorJobs(keyword) {
-  let browser;
+const CARD_SELECTOR =
+  '[data-test="jobListing"], li[class*="JobsList_jobListItem"], .jobCard, [data-test="job-card"], .react-job-listing';
+
+async function scrapeGlassdoorJobs(keyword, sharedBrowser) {
+  const ownsBrowser = !sharedBrowser;
+  let browser = sharedBrowser;
+  let page;
 
   try {
-    browser = await launchBrowser();
-
-    const page = await browser.newPage();
-
-    await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-        "AppleWebKit/537.36 (KHTML, like Gecko) " +
-        "Chrome/120.0.0.0 Safari/537.36"
-    );
-
-    await page.setViewport({
-      width: 1280,
-      height: 800,
-    });
+    browser = browser || (await launchBrowser());
+    page = await createPage(browser);
 
     const url = `https://www.glassdoor.co.in/Job/jobs.htm?sc.keyword=${encodeURIComponent(
-      keyword
+      keyword,
     )}`;
 
     console.log("🔍 Navigating to Glassdoor:", url);
 
-    await page.goto(url, {
-      waitUntil: "domcontentloaded",
-      timeout: 90000,
-    });
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
 
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    try {
+      await page.waitForSelector(CARD_SELECTOR, { timeout: 15000 });
+    } catch {
+      console.log("❌ Glassdoor: no job cards appeared.");
+      await logPageState(page, "Glassdoor"); // "Just a moment..." = Cloudflare block
+      return [];
+    }
 
-    const jobs = await page.evaluate(() => {
-      const jobs = [];
+    const jobs = await page.evaluate((cardSelector) => {
+      const pick = (root, selectors) => {
+        for (const s of selectors) {
+          const el = root.querySelector(s);
+          const t = el && el.textContent.trim();
+          if (t) return t;
+        }
+        return null;
+      };
 
-      const jobCards = document.querySelectorAll(
-        '.jobCard, [data-test="job-card"], .react-job-listing, [class*="job-listing"]'
+      const results = [];
+      const cards = Array.from(document.querySelectorAll(cardSelector)).slice(
+        0,
+        15,
       );
 
-      jobCards.forEach((card, index) => {
-        if (index >= 15) return;
-
+      for (const card of cards) {
         try {
-          const textContent =
-            card.innerText || card.textContent || "";
+          // Preferred: stable data-test attributes
+          let title = pick(card, [
+            '[data-test="job-title"]',
+            'a[class*="JobCard_jobTitle"]',
+            ".jobTitle",
+          ]);
+          let company = pick(card, [
+            '[data-test="employer-short-name"]',
+            '[class*="EmployerProfile_compactEmployerName"]',
+            '[data-test="emp-name"]',
+            ".employerName",
+          ]);
+          let location = pick(card, [
+            '[data-test="emp-location"]',
+            '[class*="JobCard_location"]',
+            ".location",
+          ]);
+          const salary =
+            pick(card, [
+              '[data-test="detailSalary"]',
+              '[class*="JobCard_salaryEstimate"]',
+              ".salary-estimate",
+            ]) || "Not specified";
 
-          const lines = textContent
-            .split("\n")
-            .map((line) => line.trim())
-            .filter((line) => line.length > 0);
-
-          let title =
-            lines.find(
-              (line) => line.length > 10 && line.length < 100
-            ) || "N/A";
-
-          let company =
-            lines.find(
-              (line) =>
-                line.includes("Company") || line.length < 50
-            ) || "Unknown";
-
-          let location =
-            lines.find(
-              (line) =>
-                line.includes("Location") ||
-                /[A-Z][a-z]+, [A-Z]{2}/.test(line)
-            ) || "N/A";
-
-          let link = "#";
+          // Fallback: guess from text lines (your original approach)
+          if (!title || !company) {
+            const lines = (card.innerText || "")
+              .split("\n")
+              .map((l) => l.trim())
+              .filter(Boolean);
+            title =
+              title ||
+              lines.find((l) => l.length > 5 && l.length < 100) ||
+              null;
+            company =
+              company ||
+              lines.find((l) => l !== title && l.length < 50) ||
+              "Unknown";
+          }
+          location = location || "N/A";
 
           const linkEl = card.querySelector(
-            'a[href*="/Job/"], a[href*="partner/jobListing"]'
+            'a[data-test="job-link"], a[href*="/job-listing/"], a[href*="/Job/"], a[href*="partner/jobListing"]',
           );
-
+          let link = "#";
           if (linkEl) {
             const href = linkEl.getAttribute("href");
-
             if (href) {
-              if (href.startsWith("http")) {
-                link = href;
-              } else if (href.startsWith("/")) {
-                link = `https://www.glassdoor.co.in${href}`;
-              } else {
-                link = `https://www.glassdoor.co.in/${href}`;
-              }
+              link = href.startsWith("http")
+                ? href
+                : `https://www.glassdoor.co.in${href.startsWith("/") ? "" : "/"}${href}`;
             }
           }
 
-          if (title !== "N/A" && !title.includes("Sign In")) {
-            jobs.push({
+          if (title && !title.includes("Sign In")) {
+            results.push({
               title,
-              company: company.replace("Company", "").trim(),
-              location: location.replace("Location", "").trim(),
-              salary: "Not specified",
+              company: company.replace(/\d(\.\d)?\s*★?$/, "").trim(), // strip trailing rating
+              location,
+              salary,
               link,
               source: "glassdoor",
             });
           }
-        } catch (error) {
-          console.log(
-            "Error processing Glassdoor job card:",
-            error.message
-          );
+        } catch (e) {
+          console.log("glassdoor error message", e.message);
+          // skip a broken card
         }
-      });
-
-      return jobs;
-    });
+      }
+      return results;
+    }, CARD_SELECTOR);
 
     console.log(`✅ Glassdoor jobs found: ${jobs.length}`);
-
     return jobs;
   } catch (error) {
-    console.log(
-      "❌ Error scraping Glassdoor:",
-      error.message
-    );
-
+    console.log("❌ Error scraping Glassdoor:", error.message);
     return [];
   } finally {
-    if (browser) {
-      try {
-        await browser.close();
-      } catch (error) {
-        console.log(
-          "⚠️ Error closing Glassdoor browser:",
-          error.message
-        );
-      }
-    }
+    if (page) await page.close().catch(() => {});
+    if (ownsBrowser && browser) await browser.close().catch(() => {});
   }
 }
 

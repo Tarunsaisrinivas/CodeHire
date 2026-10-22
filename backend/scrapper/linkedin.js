@@ -1,104 +1,72 @@
 const launchBrowser = require("../utils/browser");
+const { createPage, logPageState } = require("../utils/pageSetup");
 
-async function scrapeLinkedInJobs(keyword) {
-  let browser;
+const LIST_SELECTOR = "ul.jobs-search__results-list li";
+
+async function scrapeLinkedInJobs(keyword, sharedBrowser) {
+  const ownsBrowser = !sharedBrowser;
+  let browser = sharedBrowser;
+  let page;
 
   try {
-    browser = await launchBrowser();
-
-    const page = await browser.newPage();
-
-    // Set User-Agent
-    await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-        "AppleWebKit/537.36 (KHTML, like Gecko) " +
-        "Chrome/115 Safari/537.36"
-    );
+    browser = browser || (await launchBrowser());
+    page = await createPage(browser);
 
     const searchUrl = `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(
-      keyword
-    )}`;
+      keyword,
+    )}&location=India`;
 
     console.log("🔍 Navigating to LinkedIn:", searchUrl);
 
     await page.goto(searchUrl, {
-      waitUntil: "networkidle2",
-      timeout: 60000,
+      waitUntil: "domcontentloaded",
+      timeout: 45000,
     });
 
-    // Wait for job results
-    await page.waitForSelector(
-      "ul.jobs-search__results-list li",
-      {
-        timeout: 15000,
-      }
-    );
+    try {
+      await page.waitForSelector(LIST_SELECTOR, { timeout: 15000 });
+    } catch {
+      console.log("❌ LinkedIn: job list did not appear.");
+      await logPageState(page, "LinkedIn"); // "authwall"/"login" in URL = blocked
+      return [];
+    }
 
-    const jobs = await page.evaluate(() => {
-      return Array.from(
-        document.querySelectorAll(
-          "ul.jobs-search__results-list li"
-        )
-      )
+    const jobs = await page.evaluate((listSelector) => {
+      const text = (el, sel) => {
+        const node = el.querySelector(sel);
+        const t = node && node.textContent.trim();
+        return t || null;
+      };
+
+      return Array.from(document.querySelectorAll(listSelector))
         .slice(0, 15)
         .map((el) => {
-          const title = el
-            .querySelector(".base-search-card__title")
-            ?.innerText.trim();
-
-          const company = el
-            .querySelector(".base-search-card__subtitle")
-            ?.innerText.trim();
-
-          const location = el
-            .querySelector(".job-search-card__location")
-            ?.innerText.trim();
-
-          const link = el.querySelector(
-            "a.base-card__full-link"
-          )?.href;
-
-          const logo =
-            el
-              .querySelector(".artdeco-entity-image")
-              ?.getAttribute("data-delayed-url") ||
-            el
-              .querySelector(".artdeco-entity-image")
-              ?.getAttribute("src") ||
-            null;
-
+          const img = el.querySelector(".artdeco-entity-image");
           return {
-            title,
-            company,
-            location,
-            link,
-            logo,
+            title: text(el, ".base-search-card__title"),
+            company: text(el, ".base-search-card__subtitle") || "Unknown",
+            location: text(el, ".job-search-card__location") || "N/A",
+            link: el.querySelector("a.base-card__full-link")?.href || "#",
+            logo:
+              (img &&
+                (img.getAttribute("data-delayed-url") ||
+                  img.getAttribute("src"))) ||
+              null,
+            salary: "Not specified",
             source: "linkedin",
           };
-        });
-    });
+        })
+        .filter((job) => job.title);
+    }, LIST_SELECTOR);
 
     console.log(`✅ Scraped ${jobs.length} LinkedIn jobs`);
-
     return jobs;
   } catch (error) {
-    console.log(
-      "❌ Error scraping LinkedIn:",
-      error.message
-    );
-
+    console.log("❌ Error scraping LinkedIn:", error.message);
     return [];
   } finally {
-    if (browser) {
-      try {
-        await browser.close();
-      } catch (error) {
-        console.log(
-          "⚠️ Error closing LinkedIn browser:",
-          error.message
-        );
-      }
-    }
+    if (page) await page.close().catch(() => {});
+    if (ownsBrowser && browser) await browser.close().catch(() => {});
   }
 }
 
